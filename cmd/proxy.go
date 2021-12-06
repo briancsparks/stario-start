@@ -49,24 +49,44 @@ func init() {
 }
 
 func onReady() {
-  for {
-    isProxy, proxy, problem, err := checkProxy(false)
-    if err != nil {
-      systray.SetTooltip(err.Error())
-    } else if len(problem) > 0 {
-      systray.SetTooltip(problem)
-    } else if len(proxy) > 0 {
-      systray.SetTooltip(proxy)
-    }
+  systray.SetIcon(globeICO)
 
-    if isProxy {
-      systray.SetIcon(globeEyeICO)
-    } else {
-      systray.SetIcon(globeICO)
-    }
+  quit := systray.AddMenuItem("Quit", "Quit stario-start")
 
-    time.Sleep(2 * time.Second)
-  }
+  go func() {
+    for {
+      select {
+      case <- quit.ClickedCh:
+        systray.Quit()
+        return
+      }
+    }
+  }()
+
+  go func() {
+    for {
+        isProxy, proxy, problem, err := checkProxy(false)
+        if err != nil {
+          systray.SetTooltip(err.Error())
+        } else if len(problem) > 0 {
+          systray.SetTooltip(problem)
+        } else if len(proxy) > 0 {
+          systray.SetTooltip(proxy)
+        } else {
+          systray.SetTooltip("Ok - No Proxy")
+        }
+
+        if isProxy {
+          systray.SetIcon(globeEyeICO)
+          systray.SetTooltip("Ok - " + proxy)
+        } else {
+          systray.SetIcon(globeICO)
+          systray.SetTooltip("Ok - No Proxy")
+        }
+
+        time.Sleep(2 * time.Second)
+      }
+  }()
 }
 
 func onExit() {
